@@ -68,3 +68,15 @@ export const verifyOTP = async (email, otp) => {
         throw error.response?.data || error.message;
     }
 };
+export const resendOTP = async (email) => {
+    try {
+        const response = await axios.post(
+            `${API}/resend-otp`,
+            { email },
+            { withCredentials: true }
+        );
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || error.message;
+    }
+};

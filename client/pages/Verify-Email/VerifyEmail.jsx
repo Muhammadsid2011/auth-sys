@@ -88,6 +88,7 @@ export default function VerifyEmail() {
 
       await resendOTP(email);
     } catch (err) {
+      console.error(err)
       setError(
         err?.response?.data?.message ||
           "Failed to resend OTP. Please try again."

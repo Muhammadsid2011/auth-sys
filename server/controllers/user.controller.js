@@ -192,4 +192,64 @@ const verifyUser = async (req, res) => {
     }
 }
 
-export { signup, login, logout, verifyOtp, verifyUser };
+const resendOtp = async (req, res) => {
+    try {
+        let { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({
+                message: "Email is required"
+            });
+        }
+
+        email = email.trim().toLowerCase();
+
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(400).json({
+                message: "User not found"
+            });
+        }
+
+        if (user.isVerified) {
+            return res.status(400).json({
+                message: "User already verified"
+            });
+        }
+
+        // 🔒 RATE LIMIT (60 seconds)
+        if (user.otpExpiry && user.otpExpiry - Date.now() > 9 * 60 * 1000) {
+            return res.status(429).json({
+                message: "Please wait before requesting another OTP"
+            });
+        }
+
+        // Generate new OTP
+        const otp = generateOtp();
+        const hashedOtp = await hash(otp);
+
+        user.otp = hashedOtp;
+        user.otpExpiry = Date.now() + 10 * 60 * 1000;
+
+        await user.save();
+
+        await sendEmail(
+            user.email,
+            "Your new verification OTP",
+            sendOTP(user.username, otp)
+        );
+
+        return res.status(200).json({
+            message: "New OTP sent to your email"
+        });
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            message: "Internal server error"
+        });
+    }
+};
+
+export { signup, login, logout, verifyOtp, verifyUser, resendOtp };
