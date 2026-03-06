@@ -4,7 +4,8 @@ import {
   Home,
   Login,
   Signup,
-  VerifyEmail
+  VerifyEmail,
+  About
 } from '@/pages/';
 import MainLayout from '@/layout/MainLayout';
 
@@ -19,7 +20,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
-          <Route path="/about" element={<h1>About Page</h1>} />
+          <Route path="/about" element={<About />} />
         </Route>
       </Routes>
     </Router>
