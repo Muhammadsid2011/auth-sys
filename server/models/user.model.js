@@ -3,49 +3,69 @@ import jwt from "jsonwebtoken";
 import hash from "../utils/hash.js";
 import bcrypt from "bcryptjs";
 
-const userSchema = new Schema({
-    username: {
-        type: String,
-        required: true,
-        unique: true,
-        lowercase: true,
-        trim: true,
-        index: true
+const userSchema = new Schema(
+    {
+        username: {
+            type: String,
+            required: true,
+            unique: true,
+            lowercase: true,
+            trim: true,
+            index: true
+        },
+
+        email: {
+            type: String,
+            required: true,
+            unique: true,
+            lowercase: true,
+            trim: true
+        },
+
+        password: {
+            type: String
+        },
+
+        provider: {
+            type: String,
+            enum: ["local", "google"],
+            default: "local"
+        },
+
+        googleId: {
+            type: String
+        },
+
+        otp: {
+            type: String
+        },
+
+        otpExpiry: {
+            type: Date
+        },
+
+        isVerified: {
+            type: Boolean,
+            default: false
+        }
+
     },
-    email: {
-        type: String,
-        required: true,
-        unique: true,
-        lowercase: true,
-        trim: true
-    },
-    password: {
-        type: String,
-        required: true
-    },
-    otp: {
-        type: String
-    },
-    otpExpiry: {
-        type: Date
-    },
-    isVerified: {
-        type: Boolean,
-        default: false
-    }
-}, {timestamps:true})
+    { timestamps: true }
+)
 
 userSchema.pre("save", async function () {
+
+    if (this.provider !== "local") return;
+
     if (!this.isModified("password")) return;
 
     try {
         this.password = await hash(this.password);
-
     } catch (error) {
         console.error(error);
     }
-});
 
+});
 userSchema.methods.isPasswordCorrect = async function (password) {
     return bcrypt.compare(password, this.password)
 }

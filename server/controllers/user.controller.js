@@ -5,6 +5,9 @@ import generateOtp from "../utils/generateOtp.js";
 import sendEmail from "../utils/sendEmail.js";
 import hash from "../utils/hash.js"
 import sendOTP from "../templates/emailTemplate.js";
+import { OAuth2Client } from "google-auth-library";
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const signup = async (req, res) => {
     try {
@@ -33,6 +36,7 @@ const signup = async (req, res) => {
             email,
             password,
             otp: hashedOtp,
+            provider: "local",
             otpExpiry: Date.now() + 10 * 60 * 1000, // 10 minutes
             isVerified: false
         });
@@ -140,6 +144,12 @@ const login = async (req, res) => {
         const user = await User.findOne({
             email: email.toLowerCase()
         });
+
+        if (user.provider !== "local") {
+            return res.status(400).json({
+                message: "Please login using Google"
+            });
+        }
 
         if (!user) {
             return res.status(401).json({ message: "Invalid credentials" });
@@ -252,4 +262,60 @@ const resendOtp = async (req, res) => {
     }
 };
 
-export { signup, login, logout, verifyOtp, verifyUser, resendOtp };
+const googleAuth = async (req, res) => {
+    try {
+
+        const { credential } = req.body;
+
+        if (!credential) {
+            return res.status(400).json({ message: "Token missing" });
+        }
+
+        const ticket = await client.verifyIdToken({
+            idToken: credential,
+            audience: process.env.GOOGLE_CLIENT_ID
+        });
+
+        const payload = ticket.getPayload();
+
+        const email = payload.email;
+        const name = payload.name;
+        const picture = payload.picture;
+        const googleId = payload.sub;
+
+        let user = await User.findOne({ email });
+
+        if (!user) {
+
+            user = await User.create({
+                username: name.replace(/\s+/g, "").toLowerCase(),
+                email,
+                googleId,
+                provider: "google",
+                isVerified: true
+            });
+
+        }
+
+        const token = await user.generateAuthToken();
+
+        res.cookie("token", token, cookiesOption);
+
+        return res.status(200).json({
+            message: "Google login successful",
+            user: {
+                _id: user._id,
+                username: user.username,
+                email: user.email
+            }
+        });
+
+    } catch (error) {
+
+        console.error(error);
+        res.status(500).json({ message: "Google auth failed" });
+
+    }
+};
+
+export { signup, login, logout, verifyOtp, verifyUser, resendOtp, googleAuth };

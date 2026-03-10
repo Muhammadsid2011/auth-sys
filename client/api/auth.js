@@ -80,3 +80,21 @@ export const resendOTP = async (email) => {
         throw error.response?.data || error.message;
     }
 };
+
+export const googleLogin = async (credentialResponse) => {
+  try {
+
+    const res = await axios.post(
+      "http://localhost:3000/api/user/google",
+      {
+        credential: credentialResponse.credential
+      },
+      { withCredentials: true }
+    );
+
+  } catch (error) {
+    console.error(error);
+  }finally{
+    window.location.href = '/'
+  }
+};
