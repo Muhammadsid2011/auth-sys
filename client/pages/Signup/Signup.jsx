@@ -12,11 +12,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import CheckboxBasic from "@/components/Checkbox/CheckBox"
 import { useState, useEffect } from "react"
-import { signupUser } from "@/api/auth"
+import { signupUser, googleLogin } from "@/api/auth"
 import { Link, useNavigate } from "react-router-dom"
 import { useSelector, useDispatch } from "react-redux"
 import { setUser, setVerified } from "@/redux/userSlice"
 import { Spinner } from "@/components/ui/spinner"
+import { GoogleLogin, useGoogleLogin } from '@react-oauth/google';
+import axios from "axios"
 
 function Signup() {
   const navigate = useNavigate()
@@ -31,7 +33,6 @@ function Signup() {
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
 
-  // Redirect to home only when account exists *and* is verified
   useEffect(() => {
     if (user?.isVerified) {
       navigate("/")
@@ -142,8 +143,18 @@ function Signup() {
 
             </div>
           </form>
-        </CardContent>
 
+        </CardContent>
+        <div className="w-full flex justify-center px-4 py-2">
+          <div className="w-full rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300">
+            <GoogleLogin
+              onSuccess={googleLogin}
+              onError={() => console.log("Login Failed")}
+              theme="outline"
+              size="large"
+            />
+          </div>
+        </div>
         <CardFooter>
           <Button
             type="submit"

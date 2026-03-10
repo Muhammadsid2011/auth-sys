@@ -12,9 +12,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import CheckboxBasic from "@/components/Checkbox/CheckBox"
 import { useState } from "react"
-import { loginUser } from "@/api/auth"
+import { googleLogin, loginUser } from "@/api/auth"
 import { Link, useNavigate } from "react-router-dom"
 import { useSelector } from "react-redux"
+import { GoogleLogin } from "@react-oauth/google"
 
 function Login() {
     const navigate = useNavigate()
@@ -23,7 +24,7 @@ function Login() {
     const [showPassword, setShowPassword] = useState(false);
     const user = useSelector((state) => state.user.user);
 
-    if(user) {
+    if (user) {
         navigate('/')
     }
 
@@ -89,6 +90,7 @@ function Login() {
                                 </div>
                                 <Input
                                     id="password"
+                                    placeholder="********"
                                     type={showPassword ? "text" : "password"}
                                     required
                                     value={password}
@@ -100,7 +102,7 @@ function Login() {
                                     id="showPassword"
                                     checked={showPassword}
                                     onCheckedChange={(checked) => setShowPassword(checked === true)}
-                                /> 
+                                />
                                 <Label htmlFor="showPassword" className="cursor-pointer">
                                     Show Password
                                 </Label>
@@ -108,6 +110,16 @@ function Login() {
                         </div>
                     </form>
                 </CardContent>
+                <div className="w-full flex justify-center px-4 py-2">
+                    <div className="w-full rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300">
+                        <GoogleLogin
+                            onSuccess={googleLogin}
+                            onError={() => console.log("Login Failed")}
+                            theme="outline"
+                            size="large"
+                        />
+                    </div>
+                </div>
                 <CardFooter className="flex-col gap-2">
                     <Button type="submit" form="login-form" className="w-full">
                         Login
